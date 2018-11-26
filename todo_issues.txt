@@ -1,0 +1,41 @@
+TODO/POSSIBLE ISSUES
+
+0. The system was tuned by splitting the training file into training and test (validation and crowdsourced file weren't used for hyperparameter tuning).
+While the results are very good on the split training file (F1 around 0.85 -- see the 4 .txt files in /home/ashwath/Files/SemEval/hyperparamtuning, which contain the results of the best 4 sets of hyperparams), the results are not good when trained on the training set, and validated on the 
+validation, crowdsourced sets (/home/ashwath/Files/SemEval/logs/validation_log_2018-11-26_130512.log) Are they significantly different?). Try again using method in 2. 
+
+1. I'm creating an intermediate file with ground truths and the articles together. Can it be done without this?
+
+2. IMPORTANT 
+
+I'm training doc2vec with 2 tags for each of the 2 hyperpartisan values (I convert true to 1 and false to 0
+to save memory) and then using SVM. (Based on https://towardsdatascience.com/multi-class-text-classification-with-doc2vec-logistic-regression-9da9947b43f4).
+
+This might not be the perfect way to do it, according to gojimo's answer here. https://stackoverflow.com/questions/51985536/gensim-doc2vec-how-to-infer-label.
+He suggests that the above method creates vectors based on 2 'giant documents'. 
+
+He suggests having a tag for each doc (its article id perhaps). After tagging the docs based on this method (1 tag per doc), it might be better to
+then train the SVM based on these hundreds of thousands of vectors, and only introduce the hyperpartisan labels at this stage. Of course, this will need
+a lot more RAM, and 4. needs to be almost certainly done for this to work.
+
+This is quite a big change if it needs to be done.
+
+3. Convert hyperpartisan back to true and false in the predictions. Write predictions to output file.
+
+4. Use generators instead of Pandas dataframes.
+
+5. Use SAX instead of lmxl? This might help with 1. and 4.
+
+6. I'm removing the article ids and using only the tags in doc2vec. These article ids are required according to https://groups.google.com/forum/#!topic/pan-workshop-series/NvXVxWLxUn8. They need to be present in the final results.
+
+7. Change programs to match their evaluation script.
+
+8. Their training and validation data seem to have issues. Reading to a dataframe and removing values (keeping only values which are pd.notnull in title and content): df = df[pd.notnull(df['content'])], df = df[pd.notnull(df['title'])] results in the foll. for the training and validation data.
+Original DF shape = (600000, 3)
+Dataframe shape after cleaning = (598324, 3)
+
+Original DF shape = (150000, 3)
+Dataframe shape after cleaning = (137723, 3)
+
+
+The method has been tested on various hyperparameters, and this should be the best possible (sample may be further reduced, but is it needed?)
