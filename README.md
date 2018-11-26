@@ -1,6 +1,6 @@
 Created: 26 November 2017
 
-**see the todo_issues.txt**
+**see also the todo_issues.txt**
 
 
 The method used for the hyperpartisan classification problem is two-fold.
