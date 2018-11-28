@@ -32,10 +32,10 @@ def get_xml_root(xml_filepath):
     root = doc.getroot()
     return root
 
-def get_xml_file_path(dataset_type, data_path):
+def get_xml_file_path(dataset_type, sem_eval_dir_path):
     """ Uses the dataset type to get the appropriate ground truth XML file"""
     # NOTE: This function needs to be edited when the test set ground truth is available
-    basepath = '{}/GroundTruth'.format(data_path)
+    basepath = '{}/data/GroundTruth'.format(sem_eval_dir_path)
     if dataset_type == 'training':
         # Buzzfeed training ground truth
         return '{}/ground-truth-training-bypublisher-20181122.xml'.format(basepath)
@@ -170,11 +170,11 @@ def main():
     parser.add_argument("--nodrop",'-n', action="store_true", default="True",
                         help="Use this argument to not drop the table (this is the "
                         "default behaviour)")
-    parser.add_argument("--path",'-p', default="/home/ashwath/Files/SemEval/data",
-                        help="Use this argument to change the data path (the default path is: '/home/ashwath/Files/SemEval/data')")
+    parser.add_argument("--path",'-p', default="/home/ashwath/Files/SemEval",
+                        help="Use this argument to change the SemEval directory path (the default path is: '/home/ashwath/Files/SemEval')")
     args = parser.parse_args()
-    data_path = args.path
-    db_path = '{}/Databases/ground_truth.sqlite3'.format(data_path)
+    sem_eval_dir_path = args.path
+    db_path = '{}/data/Databases/ground_truth.sqlite3'.format(sem_eval_dir_path)
     connection = db_connect(db_path)
     # Create appropriate ground truth table based on command line argument
     table_name = set_sqlite_table_name(args.type)
@@ -187,7 +187,7 @@ def main():
             sys.exit()
     create_ground_truth_table(connection, table_name)
     # Get xml file path and name based on 'type' argument and get the xml root
-    ground_truth_xmlpath = get_xml_file_path(args.type, data_path)
+    ground_truth_xmlpath = get_xml_file_path(args.type, sem_eval_dir_path)
     ground_root = get_xml_root(ground_truth_xmlpath)
     # Insert into appropriate ground truth table
     insert_into_ground_truth(connection, ground_root, table_name)

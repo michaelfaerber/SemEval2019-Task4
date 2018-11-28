@@ -20,6 +20,7 @@ import clean_shuffle
 from para2vec import ParagraphVectorModel, get_vector_label_mapping
 from sklearn.linear_model import SGDClassifier
 from sklearn.externals import joblib
+import argparse
 
 def build_pv_models(df):
     """ Function which builds the paragraph vector models (title and content models) based on the 
@@ -52,14 +53,19 @@ def main():
     """ Main function which reads the training file into a shuffled data frame, builds 2 ParagraphVectorModels,
     combines them, gets the resulting vector-label mappings, and trains an SVM (SVC) model on these mappings.
     This SVM model is persisted to disk."""
-    filename = '/home/ashwath/Files/SemEval/data/IntegratedFiles/buzzfeed_training.tsv'
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--path",'-p', default="/home/ashwath/Files/SemEval",
+                        help="Use this argument to change the SemEval directory path (the default path is: '/home/ashwath/Files/SemEval')")
+    args = parser.parse_args()
+    sem_eval_dir_path = args.path
+    filename = '{}/data/IntegratedFiles/buzzfeed_training.tsv'.format(sem_eval_dir_path)
     df = clean_shuffle.read_prepare_df(filename)
     pv = build_pv_models(df)
     # Get a composite embedding model
     X_train, y_train = get_vector_label_mapping(pv)
     svc = train_ml_model(X_train, y_train)
     # Serialize the model and save to disk
-    joblib.dump(svc, '/home/ashwath/Files/SemEval/models/svc_embeddings.joblib')
+    joblib.dump(svc, '{}/models/svc_embeddings.joblib'.format(sem_eval_dir_path))
     print("DONE!")
 
 if __name__ == '__main__':
