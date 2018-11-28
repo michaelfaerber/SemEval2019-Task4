@@ -40,7 +40,7 @@ def get_xml_root(xml_filepath):
 def get_xml_file_path(dataset_type, data_path):
     """ Uses the dataset type to get the appropriate article XML file"""
     # NOTE: This function needs to be edited when the test set ground truth is available
-    basepath = '{}/data-small-sample'.format(data_path)
+    basepath = '{}/Articles'.format(data_path)
     if dataset_type == 'training':
         # Buzzfeed training ground truth
         return '{}/articles-training-bypublisher-20181122.xml'.format(basepath)
