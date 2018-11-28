@@ -37,10 +37,10 @@ def get_xml_root(xml_filepath):
     root = doc.getroot()
     return root
 
-def get_xml_file_path(dataset_type):
+def get_xml_file_path(dataset_type, data_path):
     """ Uses the dataset type to get the appropriate article XML file"""
     # NOTE: This function needs to be edited when the test set ground truth is available
-    basepath = '/home/ashwath/Files/SemEval/data/Articles'
+    basepath = '{}/data-small-sample'.format(data_path)
     if dataset_type == 'training':
         # Buzzfeed training ground truth
         return '{}/articles-training-bypublisher-20181122.xml'.format(basepath)
@@ -56,10 +56,10 @@ def get_xml_file_path(dataset_type):
     # Crowd-sourced testing ground truth
     return 'Dummy: not yet available'
 
-def set_output_file(dataset_type):
+def set_output_file(dataset_type, data_path):
     """ Uses the dataset type to set the appropriate article output (tsv) filename"""
     # NOTE: This function needs to be edited when the test set ground truth is available
-    basepath = '/home/ashwath/Files/SemEval/data/IntegratedFiles'
+    basepath = '{}/IntegratedFiles'.format(data_path)
     if dataset_type == 'training':
         # Buzzfeed training ground truth
         return '{}/buzzfeed_training.tsv'.format(basepath)
@@ -117,14 +117,17 @@ def main():
     parser.add_argument('type', choices=['training', 'validation', 'test',
                                         'crowdsourced_train', 'crowdsourced_test'],
                         help='Select the type of dataset to fetch from XML and SQLite')
+    parser.add_argument("--path",'-p', default="/home/ashwath/Files/SemEval/data",
+                        help="Use this argument to change the data path (the default path is: '/home/ashwath/Files/SemEval/data')")
     args = parser.parse_args()
-    db_path = '/home/ashwath/Files/SemEval/data/Databases/ground_truth.sqlite3'
+    data_path = args.path
+    db_path = '{}/Databases/ground_truth.sqlite3'.format(data_path)
     connection = ground_truth_sqlite.db_connect(db_path)
     # Results should be fetchable using column names as keys
     connection.row_factory = sqlite3.Row
     table_name = ground_truth_sqlite.set_sqlite_table_name(args.type)
-    xml_file = get_xml_file_path(args.type)
-    output_tsv = set_output_file(args.type)
+    xml_file = get_xml_file_path(args.type, data_path)
+    output_tsv = set_output_file(args.type, data_path)
     write_to_tsv(connection, output_tsv, table_name, xml_file)
 
 if __name__ == '__main__':
