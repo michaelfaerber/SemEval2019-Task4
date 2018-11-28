@@ -25,16 +25,18 @@ from gensim.test.utils import get_tmpfile
 from tqdm import tqdm
 import logging
 
-logging.basicConfig(filename='/home/ashwath/Files/SemEval/logs/info_log.log', filemode='w', 
-                    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+# logging.basicConfig(filename='/home/agon/Files/SemEval/logs/info_log.log', filemode='w', 
+#                     format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 class ParagraphVectorModel:
     """ Creates a set of paragraph vectors"""
-    def __init__(self, df, init_models=True):
+    def __init__(self, df, init_models=True, sem_eval_dir_path='/home/ashwath/Files/SemEval'):
         """ ARGUMENTS: df: a dataframe with 3 columns -- title, content and hyperpartisan"""
         self.df = df
         self.tagged_contentdocs = pd.Series()
         self.tagged_titledocs = pd.Series()
+
+        self.sem_eval_dir_path = sem_eval_dir_path
 
         # if init_models is False, it is a validation/test set, and the models should not be 
         # initialized here.
@@ -78,7 +80,7 @@ class ParagraphVectorModel:
                                       total_examples=self.model_content_dbow.corpus_count,
                                       epochs=self.model_content_dbow.epochs)
 
-        fname = get_tmpfile("/home/ashwath/Files/SemEval/embeddings/doc2vec_dbow_model_content")
+        fname = get_tmpfile("{}/embeddings/doc2vec_dbow_model_content".format(self.sem_eval_dir_path))
         self.model_content_dbow.save(fname)
         # TRAINING IS DONE: REMOVE THE MODEL TO SAVE MEMORY (infer_vector is still possible
         # as the vectors are present) 
@@ -97,7 +99,7 @@ class ParagraphVectorModel:
                                     total_examples=self.model_title_dbow.corpus_count,
                                     epochs=self.model_title_dbow.epochs)
 
-        fname = get_tmpfile("/home/ashwath/Files/SemEval/embeddings/doc2vec_dbow_model_title")
+        fname = get_tmpfile("{}/embeddings/doc2vec_dbow_model_title".format(self.sem_eval_dir_path))
         self.model_title_dbow.save(fname)
         # TRAINING IS DONE: REMOVE THE MODEL TO SAVE MEMORY (infer_vector is
         # still possible as the vectors are present)

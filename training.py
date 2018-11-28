@@ -22,7 +22,7 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.externals import joblib
 import argparse
 
-def build_pv_models(df):
+def build_pv_models(df, sem_eval_dir_path):
     """ Function which builds the paragraph vector models (title and content models) based on the 
     data in the data frame df. 
     ARGUMENTS: df, Pandas Dataframe which has already been shuffled.
@@ -31,7 +31,7 @@ def build_pv_models(df):
     DETAILS: The 2 Doc2Vec models can be accessed by pv.model_content_dbow and pv.model_title_dbow.
              These are committed to disk when build_doc2vec_content_model and build_doc2vec_title_model are
               called (as Embeddings/doc2vec_dbow_model_content and Embeddings/doc2vec_dbow_model_title resp.)"""
-    pv = ParagraphVectorModel(df)
+    pv = ParagraphVectorModel(df, sem_eval_dir_path=sem_eval_dir_path)
     # Remove df to save memory
     del df
     # Get docs of form [Word list, tag]: title and content tagged separately
@@ -56,16 +56,21 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--path",'-p', default="/home/ashwath/Files/SemEval",
                         help="Use this argument to change the SemEval directory path (the default path is: '/home/ashwath/Files/SemEval')")
+    parser.add_argument("--skip", '-s', action="store_true", default="False",
+                        help="Use this argument to skip training the ML model")
     args = parser.parse_args()
     sem_eval_dir_path = args.path
     filename = '{}/data/IntegratedFiles/buzzfeed_training.tsv'.format(sem_eval_dir_path)
     df = clean_shuffle.read_prepare_df(filename)
-    pv = build_pv_models(df)
-    # Get a composite embedding model
-    X_train, y_train = get_vector_label_mapping(pv)
-    svc = train_ml_model(X_train, y_train)
-    # Serialize the model and save to disk
-    joblib.dump(svc, '{}/models/svc_embeddings.joblib'.format(sem_eval_dir_path))
+    pv = build_pv_models(df, sem_eval_dir_path)
+
+    if args.skip is False:
+        # Get a composite embedding model
+        X_train, y_train = get_vector_label_mapping(pv)
+        svc = train_ml_model(X_train, y_train)
+        # Serialize the model and save to disk
+        joblib.dump(svc, '{}/models/svc_embeddings.joblib'.format(sem_eval_dir_path))
+
     print("DONE!")
 
 if __name__ == '__main__':
