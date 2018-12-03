@@ -75,27 +75,36 @@ def main():
 
   # 1. Load the texts
   X_train_texts, y_train, X_test_texts, y_test = load_texts()
+  print('Texts loaded. Train texts shape: {}'.format(X_train_texts.shape))
 
   # 2. Encode texts as sequences
   tokenizer = Tokenizer()
   tokenizer.fit_on_texts(X_train_texts)
+  print('Tokenizer fit on texts')
   train_sequences = tokenizer.texts_to_sequences(X_train_texts)
+  print('Train sequences generated: {}'.format(train_sequences.shape))
 
   # 3. Pad sequenecs to have the same length
   seq_len = max([len(seq) for seq in train_sequences])
   X_train = pad_sequences(train_sequences, maxlen=seq_len, padding='post')
+  print('Train sequences padded')
 
   test_sequences = tokenizer.texts_to_sequences(X_test_texts)
+  print('Test sequences generated: {}'.format(train_sequences.shape))
   X_test = pad_sequences(test_sequences, maxlen=seq_len, padding='post')
+  print('Test sequences padded')
 
   # 4. Vocab size
   vocab_size = len(tokenizer.word_index) + 1
+  print('Vocab size: {}'.format(vocab_size))
 
   # 5. Load word vectors
   word_vectors = load_word_vectors()
+  print('Loaded word2vec')
 
   # 6. Create weights matrix
   weights_matrix = get_weights_matrix(word_vectors, tokenizer.word_index)
+  print('weights matrix generated: {}'.format(weights_matrix.shape))
   
   # Remove word_vectors to free up memory
   del word_vectors
@@ -125,12 +134,14 @@ def main():
 
   model.add(Dense(1, activation='sigmoid'))
 
-  # print(model.summary())
+  print(model.summary())
 
+  print('Compiling model')
   model.compile(loss='binary_crossentropy',
                   optimizer='adam',
                   metrics=['accuracy'])
 
+  print('Training model')
   model.fit(X_train, y_train,
               batch_size=batch_size,
               epochs=epochs,
