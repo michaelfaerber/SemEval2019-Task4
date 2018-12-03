@@ -82,7 +82,7 @@ def main():
   tokenizer.fit_on_texts(X_train_texts)
   print('Tokenizer fit on texts')
   train_sequences = tokenizer.texts_to_sequences(X_train_texts)
-  print('Train sequences generated: {}'.format(train_sequences.shape))
+  print('Train sequences generated: {}'.format(len(train_sequences)))
 
   # 3. Pad sequenecs to have the same length
   seq_len = max([len(seq) for seq in train_sequences])
@@ -90,7 +90,7 @@ def main():
   print('Train sequences padded')
 
   test_sequences = tokenizer.texts_to_sequences(X_test_texts)
-  print('Test sequences generated: {}'.format(train_sequences.shape))
+  print('Test sequences generated: {}'.format(len(test_sequences)))
   X_test = pad_sequences(test_sequences, maxlen=seq_len, padding='post')
   print('Test sequences padded')
 
