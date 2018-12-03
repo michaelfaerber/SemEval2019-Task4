@@ -18,6 +18,14 @@ def load_word_vectors():
   model = KeyedVectors.load_word2vec_format(filename, binary=True)
   return model.wv
 
+def get_dataframe_path():
+    basepath = '{}/data/Dataframes'.format(sem_eval_path)
+    if dataset_type == 'training':
+        return  '{}/buzzfeed_training.pkl'.format(basepath)
+    elif dataset_type == 'crowdsourced_training':
+        return  '{}/crowdsourced_train.pkl'.format(basepath)
+    return 'Dummy: not yet available'
+
 def get_tsv_path():
     basepath = '{}/data/IntegratedFiles'.format(sem_eval_path)
     if dataset_type == 'training':
@@ -28,7 +36,8 @@ def get_tsv_path():
 
 def load_texts():
     data_file = get_tsv_path()
-    df = clean_shuffle.read_prepare_df(data_file)
+    dataframe_path = get_dataframe_path()
+    df = clean_shuffle.read_prepare_df(data_file, file_path=dataframe_path)
 
     df["text"] = df["title"] + ' ' + df["content"]
 
