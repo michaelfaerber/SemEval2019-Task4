@@ -42,7 +42,7 @@ def clean_text(text):
     #text = preprocessing.stem_text(text)
     return text
 
-def read_prepare_df(filename):
+def read_prepare_df(filename, preprocess=True):
     """ Read a file, put it in a dataframe. Drop unnecessary columns, clean the content.
     Please provide an absolute path.
     ARGUMENTS: filename: path to the input file, string
@@ -57,8 +57,9 @@ def read_prepare_df(filename):
     df = df[pd.notnull(df['title'])]
     # Question: should I combine the title and content in one field?
 
-    df.content = df['content'].apply(clean_text)
-    df.title = df['title'].apply(clean_text)
+    if preprocess:
+      df.content = df['content'].apply(clean_text)
+      df.title = df['title'].apply(clean_text)
     # Shuffle it
     df = shuffle(df, random_state=13)
     print("Dataframe shape after cleaning = {}".format(df.shape))
