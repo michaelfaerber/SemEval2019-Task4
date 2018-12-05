@@ -18,11 +18,13 @@
 #                                 Code improved and made more user-friendly
 #                                 Moved select_from_ground_truth from 
 #                                 create_integrated_tsv
+#              04-12-2018 (V1.2): Paths cleaned up
 #
 #------------------------------------------------------------------------------------
 
 from lxml import etree
 import sqlite3
+import os
 import sys
 import argparse
 
@@ -32,10 +34,10 @@ def get_xml_root(xml_filepath):
     root = doc.getroot()
     return root
 
-def get_xml_file_path(dataset_type):
+def get_xml_file_path(dataset_type, sem_eval_dir_path):
     """ Uses the dataset type to get the appropriate ground truth XML file"""
     # NOTE: This function needs to be edited when the test set ground truth is available
-    basepath = '/home/ashwath/Files/SemEval/data/GroundTruth'
+    basepath = os.path.join(sem_eval_dir_path, 'data', 'GroundTruth')
     if dataset_type == 'training':
         # Buzzfeed training ground truth
         return '{}/ground-truth-training-bypublisher-20181122.xml'.format(basepath)
@@ -169,9 +171,13 @@ def main():
                         help="Use this argument to drop the table")
     parser.add_argument("--nodrop",'-n', action="store_true", default="True",
                         help="Use this argument to not drop the table (this is the "
-                        "default behaviour)")
+                        "default behaviour)") 
+    parser.add_argument("--path",'-p', default="/home/ashwath/Files/SemEval",
+                        help="Use this argument to change the SemEval directory path (the default path is: '/home/ashwath/Files/SemEval')")
     args = parser.parse_args()
-    db_path = '/home/ashwath/Files/SemEval/data/Databases/ground_truth.sqlite3'
+    sem_eval_dir_path = args.path
+    db_path = '{}/data/Databases/ground_truth.sqlite3'.format(sem_eval_dir_path)
+    db_path = os.path.join(sem_eval_dir_path, 'data', 'Databases', 'ground_truth.sqlite3')
     connection = db_connect(db_path)
     # Create appropriate ground truth table based on command line argument
     table_name = set_sqlite_table_name(args.type)
@@ -184,7 +190,7 @@ def main():
             sys.exit()
     create_ground_truth_table(connection, table_name)
     # Get xml file path and name based on 'type' argument and get the xml root
-    ground_truth_xmlpath = get_xml_file_path(args.type)
+    ground_truth_xmlpath = get_xml_file_path(args.type, sem_eval_dir_path)
     ground_root = get_xml_root(ground_truth_xmlpath)
     # Insert into appropriate ground truth table
     insert_into_ground_truth(connection, ground_root, table_name)

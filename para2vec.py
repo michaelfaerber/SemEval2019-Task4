@@ -1,4 +1,4 @@
-#------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
 # Name:        Para2Vec
 # Purpose:     This module contains the main ParagraphVectorModel class which is used
 #              to build 2 doc2vec dbow models. Docs are tagged to their hyperpartisan
@@ -13,28 +13,38 @@
 #                                 (internally committed to disk). 
 #                                 Functions which combine embeddings and map doc
 #                                 embeddings with their original labels.
-#                                 
-# Revisions:   
-#------------------------------------------------------------------------------------
+# Revisions:   3-12-2018  (V1.1): Tag with id instead of hyperpartisan, changed cores,
+#                                 title vector size=100 now (only concat can be used
+#                                 while combining. concat is the new default.
+#                                 get_vector_label_mapping now returns a dataframe for
+#                                 y instead of a Series. path to semeval in __init__.
+#    
+#----------------------------------------------------------------------------------------
 
+import os
 import pandas as pd
+import numpy as np
 import gensim
 from gensim.models.doc2vec import TaggedDocument, Doc2Vec
 from gensim.utils import simple_preprocess
 from gensim.test.utils import get_tmpfile
 from tqdm import tqdm
 import logging
+import multiprocessing
 
 logging.basicConfig(filename='/home/ashwath/Files/SemEval/logs/info_log.log', filemode='w', 
                     format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+cores = multiprocessing.cpu_count()
+assert gensim.models.doc2vec.FAST_VERSION > -1, "this will be painfully slow otherwise"
 
 class ParagraphVectorModel:
     """ Creates a set of paragraph vectors"""
-    def __init__(self, df, init_models=True):
-        """ ARGUMENTS: df: a dataframe with 3 columns -- title, content and hyperpartisan"""
+    def __init__(self, df, init_models=True, sem_eval_dir_path='/home/ashwath/Files/SemEval'):
+        """ ARGUMENTS: df: a dataframe with 4 columns -- id, title, content and hyperpartisan"""
         self.df = df
         self.tagged_contentdocs = pd.Series()
         self.tagged_titledocs = pd.Series()
+        self.sem_eval_dir_path = sem_eval_dir_path
 
         # if init_models is False, it is a validation/test set, and the models should not be 
         # initialized here.
@@ -42,10 +52,10 @@ class ParagraphVectorModel:
             # Initialize doc2vec models without sentences (with negative sampling).
             # Downsample the content model
             self.model_content_dbow = Doc2Vec(dm=0, vector_size=300, negative=5, hs=0, min_count=5,
-                                              workers=64, epochs=20, sample=1e-4, window=5)
+                                              workers=cores, epochs=20, sample=1e-4, window=5)
             # Interleave skip gram vectors in the title model
-            self.model_title_dbow = Doc2Vec(dm=0, vector_size=300, negative=5, hs=0, min_count=3,
-                                            workers=64, epochs=20, sample=0, dbow=1)
+            self.model_title_dbow = Doc2Vec(dm=0, vector_size=100, negative=5, hs=0, min_count=3,
+                                            workers=cores, epochs=20, sample=0, dbow=1)
 
     def get_tagged_docs(self, title_minlen=2, content_minlen=3):
         """ Gets tagged docs for a training/validation/test dataframe (both content and title
@@ -62,9 +72,9 @@ class ParagraphVectorModel:
         """     
         # Tokenize! 
         self.tagged_titledocs = self.df.apply(lambda row: TaggedDocument(
-            words=simple_preprocess(row.title, deacc=True, min_len=2), tags=[row.hyperpartisan]), axis=1)
+            words=simple_preprocess(row.title, deacc=True, min_len=2), tags=[row.id]), axis=1)
         self.tagged_contentdocs = self.df.apply(lambda row: TaggedDocument(
-            words=simple_preprocess(row.content, deacc=True, min_len=3), tags=[row.hyperpartisan]), axis=1)
+            words=simple_preprocess(row.content, deacc=True, min_len=3), tags=[row.id]), axis=1)
 
     def build_doc2vec_content_model(self):
         """ Trains a DBOW doc2vec model on the content after building the vocabulary
@@ -78,7 +88,7 @@ class ParagraphVectorModel:
                                       total_examples=self.model_content_dbow.corpus_count,
                                       epochs=self.model_content_dbow.epochs)
 
-        fname = get_tmpfile("/home/ashwath/Files/SemEval/embeddings/doc2vec_dbow_model_content")
+        fname = os.path.join(self.sem_eval_dir_path, 'embeddings', 'doc2vec_dbow_model_content_idtags')
         self.model_content_dbow.save(fname)
         # TRAINING IS DONE: REMOVE THE MODEL TO SAVE MEMORY (infer_vector is still possible
         # as the vectors are present) 
@@ -97,7 +107,7 @@ class ParagraphVectorModel:
                                     total_examples=self.model_title_dbow.corpus_count,
                                     epochs=self.model_title_dbow.epochs)
 
-        fname = get_tmpfile("/home/ashwath/Files/SemEval/embeddings/doc2vec_dbow_model_title")
+        fname = os.path.join(self.sem_eval_dir_path, 'embeddings', 'doc2vec_dbow_model_title_idtags')
         self.model_title_dbow.save(fname)
         # TRAINING IS DONE: REMOVE THE MODEL TO SAVE MEMORY (infer_vector is
         # still possible as the vectors are present)
@@ -110,24 +120,24 @@ class ParagraphVectorModel:
         """ Infer the vectors of all the documents in the tagged documents using the model sent as a parameter. 
         ARGUMENTS: None
         RETURNS: para_vectors: tuple of 300-dimensional numpy arrays for each title
-                 labels: corresponding labels in a Pandas Series
+                 tags: corresponding tags in a Pandas Series
         """
         documents = self.tagged_contentdocs.values
         # Unzip into vectors and labels, and return them
-        labels, para_vectors = zip(*[[doc.tags[0], self.model_content_dbow.infer_vector(doc.words)] for doc in documents])
-        return para_vectors, pd.Series(labels)
+        tags, para_vectors = zip(*[[doc.tags[0], self.model_content_dbow.infer_vector(doc.words)] for doc in documents])
+        return para_vectors, pd.Series(tags)
 
     def title_vectors_and_labels(self):
         """ Infer the vectors of all the documents in the tagged documents using the model sent as a parameter.
         ARGUMENTS: None
         RETURNS: para_vectors: tuple of 300-dimensional numpy arrays for each title
-                 labels: corresponding labels in a Pandas Series
+                 tags: corresponding tags in a Pandas Series
         """
         # tagged_documents is a Pandas series, convert it into a numpy array of Tagged Documents
         titles = self.tagged_titledocs.values
         # Unzip into vectors and labels, and return them
-        labels, para_vectors = zip(*[[title.tags[0], self.model_title_dbow.infer_vector(title.words)] for title in titles])
-        return para_vectors, pd.Series(labels)
+        tags, para_vectors = zip(*[[title.tags[0], self.model_title_dbow.infer_vector(title.words)] for title in titles])
+        return para_vectors, pd.Series(tags)
 
 def add_embeddings(X1, X2):
     """ Adds 2 sets of embeddings (title + content embeddings). X1 and X2 are lists of numpy arrays,
@@ -158,30 +168,36 @@ def average_embeddings(X1, X2):
 def concatenate_embeddings(X1, X2):
     """ Concatenates 2 sets of embeddings (title + content embeddings). X1 and X2 are lists of numpy arrays,
      which must be concatenated
-    ARGUMENTS: X1: Tuple of numpy arrays where each array is a 300-dimensional vector
-               X2: Tuple of numpy arrays where each array is a 300-dimensional vector
-    RETURNS: result, Tuple of numpy arrays where each array is a 600-dimensional vector. Each
+    ARGUMENTS: X1: Tuple of numpy arrays where each array is (for e.g.) a 300-dimensional vector
+               X2: Tuple of numpy arrays where each array is (for e.g.) a 100-dimensional vector
+    RETURNS: result, Tuple of numpy arrays where each array is (for this e.g.) a 400-dimensional vector. Each
                      of these arrays is obtained by concatenating the corresponding arrays in X1 and X2"""
     result = [np.concatenate((X1[i], X2[i])) for i in range(len(X1))]
     return result
 
-def get_vector_label_mapping(pv, method='avg'):
+def get_vector_label_mapping(pv, method='concat'):
     """ Function which obtains the vector-label mapping for both the title and the content and returns
     composite matrix made up of vectors formed by the method specified in 'method'
     ARGUMENTS: pv: a ParagraphVectorModel instance consisting of 2 Doc2vec dbow models
                method: one of 'avg', 'concat' and 'sum' (default is 'avg'). Method by which a composite
                        vector is formed from the title and content vectors of each training .
     RETURNS: X_composite: a single matrix which is made up of combined title and content vectors
-             y: Labels associated with the vectors
+             y: A pd DataFrame with ids and labels as the 2 columns (range index)
         """
     # Get vector-label mapping for content and title: both are in the same order as the shuffling was done
     #  before they were split. y_title = y_content
-    X_content, y_content = pv.content_vectors_and_labels()
-    X_title, y_title = pv.title_vectors_and_labels()
+    X_content, y_tag_content = pv.content_vectors_and_labels()
+    X_title, y_tag_title = pv.title_vectors_and_labels()
+    # y_tag_* are not hyperpartisan labels, but id tags
+    # TO DO: MOVE into the class later?
+    # Make it a dataframe.
+    y = pd.DataFrame(y_tag_content, columns=['id'])
+    # Get the hyperpartisan indicator from id in pv.df. There will be no NaNs, so [0] is safe.
+    y['hyperpartisan'] = y['id'].apply(lambda cur_id: pv.df['hyperpartisan'].loc[pv.df['id']==cur_id].values[0]) 
     if method == 'avg':
         X_composite = average_embeddings(X_content, X_title)
     if method == 'sum':
         X_composite = add_embeddings(X_content, X_title)
     if method == 'concat':
         X_composite = concatenate_embeddings(X_content, X_title)
-    return X_composite, y_content
+    return X_composite, y
