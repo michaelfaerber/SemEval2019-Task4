@@ -21,10 +21,13 @@ def load_trained_embeddings():
     model_title_dbow = Doc2Vec.load('{}/embeddings/doc2vec_dbow_model_title'.format(sem_eval_path))
     return model_title_dbow, model_content_dbow
 
-def get_tsv_path():
+def get_tsv_path(mode='train'):
     basepath = '{}/data/IntegratedFiles'.format(sem_eval_path)
     if dataset_type == 'training':
-        return  '{}/buzzfeed_training.tsv'.format(basepath)
+        if mode == 'train':
+            return '{}/buzzfeed_training.tsv'.format(basepath)
+        else:
+            return '{}/buzzfeed_validation.tsv'.format(basepath)
     elif dataset_type == 'crowdsourced_training':
         return  '{}/crowdsourced_train.tsv'.format(basepath)
     return 'Dummy: not yet available'
@@ -54,6 +57,32 @@ def generate_data():
     print('df reshaped')
 
     return (X_train, y_train)
+
+def load_test_data():
+    data_file = get_tsv_path(mode='test')
+    
+    val_df = clean_shuffle.read_prepare_df(data_file)
+    
+    print('df created')
+
+    model_title_dbow, model_content_dbow = load_trained_embeddings()
+    
+    print('embeddings loaded')
+
+    pv = ParagraphVectorModel(val_df, init_models=False)
+    pv.get_tagged_docs()
+    print('get_tagged_docs()')
+    pv.model_content_dbow = model_content_dbow
+    pv.model_title_dbow = model_title_dbow
+    print('Starting get_vector_label_mapping()')
+    X_test, y_test = get_vector_label_mapping(pv)
+    print('get_vector_label_mapping() completed')
+
+    # Needed to reshape from (n, 300) to (n, 300, 1) to serve as an input to the Conv layer
+    X_test = numpy.atleast_3d(X_test)
+    print('df reshaped')
+
+    return (X_test, y_test)
 
 def load_pretrained_data(generate_new_data):
     X_train_path = '{}/final_data/X_train'.format(sem_eval_path)
@@ -105,7 +134,8 @@ def main():
     kernel_size = int(args.kernel)
     epochs = int(args.epochs)
 
-    X_train, y_train, X_test, y_test = load_pretrained_data(generate_new_data=generate)
+    X_train, y_train, X_val, y_val = load_pretrained_data(generate_new_data=generate)
+    X_test, y_test = load_test_data()
 
     # max_features = 5000
     # maxlen = 400
@@ -128,7 +158,7 @@ def main():
 
     model.add(Dense(1, activation='sigmoid'))
 
-    # print(model.summary())
+    print(model.summary())
 
     model.compile(loss='binary_crossentropy',
                     optimizer='adam',
@@ -138,7 +168,11 @@ def main():
                 batch_size=batch_size,
                 epochs=epochs,
                 verbose=2,
-                validation_data=(X_test, y_test))
+                validation_data=(X_val, y_val))
+
+    scores = model.evaluate(X_test, y_test, batch_size=batch_size)
+    for idx, metric in enumerate(model.metrics_names):
+        print('{}: {}'.format(metric, scores[idx]))
 
 if __name__ == "__main__":
     main()
