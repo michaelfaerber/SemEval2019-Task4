@@ -10,6 +10,7 @@
 # Created:     22-11-2018 (V1.0): Moved from common program to a separate module
 # Revisions:   2-12-2018 (V1.1): Added id column to df (pd.read_csv). 
 #                                Added sem_eval_dir, writing/reading df from pickle
+#              13-12-2018 (V1.2): New function to create a df without hyperpartisan.
 #------------------------------------------------------------------------------------
 
 
@@ -72,3 +73,30 @@ def read_prepare_df(filename, file_path=''):
             print('Writing dataframe to disk...')
             df.to_pickle(file_path)
     return df
+
+def read_prepare_test_df(filename, file_path=''):
+    """ Read a file, put it in a dataframe. Drop unnecessary columns, clean the content.
+    Please provide an absolute path.
+    ARGUMENTS: filename: path to the input file, string
+    RETURNS: df: a 'cleaned' Pandas dataframe with 2 columns (id, content, title) in
+                 which nulls in content/title have been dropped"""
+    if os.path.isfile(file_path):
+      df = pd.read_pickle(file_path)
+    else:
+        df = pd.read_csv(filename, sep='\t', encoding='utf-8', names=['id', 'title','content'])
+        print("Original DF shape = {}".format(df.shape))
+        # Drop NaNs!!
+        df = df[pd.notnull(df['content'])]
+        df = df[pd.notnull(df['title'])]
+        # Question: should I combine the title and content in one field?
+        print('Cleaning content...')
+        df.content = df['content'].apply(clean_text)
+        df.title = df['title'].apply(clean_text)
+        # Shuffle it
+        df = shuffle(df, random_state=13)
+        print("Dataframe shape after cleaning = {}".format(df.shape))
+        if file_path:
+            print('Writing dataframe to disk...')
+            df.to_pickle(file_path)
+    return df
+

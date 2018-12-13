@@ -18,6 +18,8 @@
 #                                 while combining. concat is the new default.
 #                                 get_vector_label_mapping now returns a dataframe for
 #                                 y instead of a Series. path to semeval in __init__.
+#              13-12-2018 (V1.2): New function get_vector_tag_mapping similar to 
+#                                 get_vector_label_mapping, but returning id tags in y.
 #    
 #----------------------------------------------------------------------------------------
 
@@ -32,14 +34,14 @@ from tqdm import tqdm
 import logging
 import multiprocessing
 
-logging.basicConfig(filename='/home/ashwath/Files/SemEval/logs/info_log.log', filemode='w', 
+logging.basicConfig(filename='/home/peter-brinkmann/logs/info_log.log', filemode='w', 
                     format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 cores = multiprocessing.cpu_count()
 assert gensim.models.doc2vec.FAST_VERSION > -1, "this will be painfully slow otherwise"
 
 class ParagraphVectorModel:
     """ Creates a set of paragraph vectors"""
-    def __init__(self, df, init_models=True, sem_eval_dir_path='/home/ashwath/Files/SemEval'):
+    def __init__(self, df, init_models=True, sem_eval_dir_path='/home/peter-brinkmann'):
         """ ARGUMENTS: df: a dataframe with 4 columns -- id, title, content and hyperpartisan"""
         self.df = df
         self.tagged_contentdocs = pd.Series()
@@ -201,3 +203,29 @@ def get_vector_label_mapping(pv, method='concat'):
     if method == 'concat':
         X_composite = concatenate_embeddings(X_content, X_title)
     return X_composite, y
+
+def get_vector_tag_mapping(pv, method='concat'):
+    """ Function which obtains the vector-tag mapping for both the title and the content and returns
+    composite matrix made up of vectors formed by the method specified in 'method'
+    ARGUMENTS: pv: a ParagraphVectorModel instance consisting of 2 Doc2vec dbow models
+               method: one of 'avg', 'concat' and 'sum' (default is 'avg'). Method by which a composite
+                       vector is formed from the title and content vectors of each training .
+    RETURNS: X_composite: a single matrix which is made up of combined title and content vectors
+             y: pd.Dataframe of article IDs
+                     """
+    # Get vector-label mapping for content and title: both are in the same order as the shuffling was done
+    #  before they were split. y_title = y_content
+    X_content, y_tag_content = pv.content_vectors_and_labels()
+    X_title, y_tag_title = pv.title_vectors_and_labels()
+    # y_tag_* are not hyperpartisan labels, but id tags
+    # TO DO: MOVE into the class later?
+    # Make it a dataframe.
+    y = pd.DataFrame(y_tag_content, columns=['id'])
+    if method == 'avg':
+        X_composite = average_embeddings(X_content, X_title)
+    if method == 'sum':
+        X_composite = add_embeddings(X_content, X_title)
+    if method == 'concat':
+        X_composite = concatenate_embeddings(X_content, X_title)
+    return X_composite, y
+

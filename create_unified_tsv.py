@@ -23,7 +23,8 @@
 #              28-11-2018 (V1.2): Adding id to output file again, sem_eval_dir_path
 #                                 option added, paths cleaned up.
 #                                 
-#
+#              12-12-2018 (V1.3): Not adding hyperpartisan to the file in write_to_tsv
+#                                 We don't have the ground truth in the test file.
 #---------------------------------------------------------------------------------------
 
 from lxml import etree
@@ -80,7 +81,7 @@ def set_output_file(dataset_type, sem_eval_dir_path):
     return '{}/crowdsourced_test_withid'.format(basepath)
 
 
-def write_to_tsv(conn, output_tsv, table_name, xml_file):   
+def write_to_tsv(output_tsv, xml_file):   
     """ Read from large xml file and a sqlite table containing additional fields from the
     ground truth (both based on table_name), write the results to to a tsv file."""
 
@@ -88,7 +89,7 @@ def write_to_tsv(conn, output_tsv, table_name, xml_file):
     # DO NOT WRITE THE BIAS AND THE URL into the output file. They won't be used as I think
     # they would increase the bias of the Buzzfeed journalists who created the data set.
 
-    fieldnames = ['id', 'title', 'content', 'hyperpartisan']
+    fieldnames = ['id', 'title', 'content']
     training_tsv = open(output_tsv, 'w', encoding='utf-8')
     training_writer = csv.DictWriter(training_tsv, delimiter='\t', fieldnames=fieldnames)
     #training_writer.writeheader()
@@ -103,16 +104,7 @@ def write_to_tsv(conn, output_tsv, table_name, xml_file):
         #published_date = current_article['published-at']
         # \n is present in the content. Remove it, or there will be major issues.
         text = current_article.get_text().replace('\t', ' ').replace('\n',' ')
-        # Published date not needed?
-        # Get the hyperpartisan field from the ground truth sqlite table (which was built
-        # from the corresponding xml file)
-        ground_truth_res = ground_truth_sqlite.select_from_ground_truth(conn, identifier, table_name)
-        # change hyperpartisan to 1 for true and 0 for false
-        hyperpartisan = 1 if ground_truth_res['hyperpartisan'] == 'true' else 0
-        #print(i)
-        #bias = ground_truth_res[1]
-        #url = ground_truth_res[3]
-        training_writer.writerow({'id': identifier, 'title': title, 'content': text, 'hyperpartisan': hyperpartisan})
+        training_writer.writerow({'id': identifier, 'title': title, 'content': text})
 
 def main():
     """ Main function which parses command-line arguments, 

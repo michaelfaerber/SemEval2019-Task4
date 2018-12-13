@@ -120,11 +120,14 @@ def validate(val_file, val_filetype, df_location, outfile):
 def main():
     """ Main function which performs validation on 2 validation files."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path",'-p', default="/home/ashwath/Files/SemEval",
+    parser.add_argument("--inputDataset",'-c', default="/home/ashwath/Files/SemEval",
                         help="Use this argument to change the SemEval directory path (the default path is: '/home/ashwath/Files/SemEval')")
+    parser.add_argument("--outputDir",'-o', default="/home/ashwath/Files/SemEval",
+                        help="Use this argument to change the SemEval directory path (the default path is: '/home/ashwath/Files/SemEval')")
+
     args = parser.parse_args()
     global sem_eval_path
-    sem_eval_path = args.path
+    sem_eval_path = '/home/peter-brinkmann'
     val_file = os.path.join(sem_eval_path, 'data', 'IntegratedFiles', 'buzzfeed_validation_withid.tsv')
     crowdsourced_file = os.path.join(sem_eval_path, 'data', 'IntegratedFiles', 'crowdsourced_train_withid.tsv')
     val_df = os.path.join(sem_eval_path, 'data', 'Pickles', 'validation_df.pickle')
