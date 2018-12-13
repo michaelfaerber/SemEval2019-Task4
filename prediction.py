@@ -104,8 +104,8 @@ def test(test_file, outfile):
     truefalsedict = {0: 'false', 1: 'true'}
     y_pred_df = pd.DataFrame(y_pred, columns=['predicted_hyperpartisan'])
     y_pred_df['predicted_hyperpartisan'] = y_pred_df['predicted_hyperpartisan'].map(truefalsedict, na_action=None)
-    # The order of ids will be the same
-    y_pred_df['id'] = y_test_df.id
+    # The order of ids will be the same, also add leading zeros (to make it like the input dataset)
+    y_pred_df['id'] = y_test_df['id'].astype(str).str.zfill(7)
     # Reorder the columns
     y_pred_df = y_pred_df[['id', 'predicted_hyperpartisan']]
     # Write to file
