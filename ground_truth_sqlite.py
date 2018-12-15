@@ -159,6 +159,24 @@ def select_from_ground_truth(conn, identifier, table_name):
     # Returns a tuple of form (id, bias, hyperpartisan, url)
     return cur.fetchone()
 
+def select_id_hyperpartisan_mappings(sem_eval_dir_path, table_name):
+    """ This function queries the sqlite3 table specified in the arguments
+    for a mapping of article ids to hyperpartisans, and returns the results in a dictionary where key is the id and hyperpartisan value is the value """
+    db_path = os.path.join(sem_eval_dir_path, 'data', 'Databases', 'ground_truth.sqlite3')
+    conn = db_connect(db_path)
+    cur = conn.cursor()
+    query = """
+    SELECT id, hyperpartisan 
+    FROM {} """.format(table_name)
+    # df = pd.read_sql_query(query, conn)
+    cur.execute(query)
+
+    mappings = {}
+    for row in cur:
+        mappings[int(row[0])] = row[1]
+        
+    return mappings
+
 def main():
     """ Main function which creates the appropriate ground truth sqlite table based
     on command-line args, and inserts data from the appropriate ground truth xml file
