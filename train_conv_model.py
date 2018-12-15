@@ -84,6 +84,8 @@ def main():
 
     # Get data
     X_train, y_train = get_data()
+    print(y_train[:10])
+    return
 
     # Model definition
     model = Sequential()

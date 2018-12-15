@@ -3,6 +3,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Conv1D, MaxPooling1D, Activation, Embedding, Flatten, GlobalMaxPooling1D
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
+from keras.engine.input_layer import Input
 import argparse
 from numpy import zeros
 import clean_shuffle
@@ -13,21 +14,15 @@ import pandas as pd
 import ground_truth_sqlite
 import tensorflow as tf
 from gensim.models import KeyedVectors
+from most_common_words_service import MostCommonWordsService
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 sem_eval_path = ''
 most_common_count = 100000
-seq_len = 5000 # 2500 # Inferred from checking the sequences length distributions
+seq_len = 2500 # Inferred from checking the sequences length distributions
 embedding_dims = 300
-
-
-def load_word_vectors():
-  print('Loading word vectors...')
-  filename = '{}/GoogleNews-vectors-negative300.bin'.format(sem_eval_path)
-  model = KeyedVectors.load_word2vec_format(filename, binary=True)
-  return model.wv
 
 def load_texts(crowdsourced=False):
     tsv_name = 'crowdsourced_train' if crowdsourced is True else 'buzzfeed_training'
@@ -89,10 +84,15 @@ def main():
                         help="Use this argument to set the size of kernels. Default: 4")
     parser.add_argument("--crowdsourced", '-c', action='store_true', default="False",
                         help="Use this argument to work with the crowdsourced file")
+    parser.add_argument("--words", '-w', default="100000",
+                        help="Use this argument to set the number of words to use. Default: 100,000")
     args = parser.parse_args()
     
     global sem_eval_path
     sem_eval_path = args.path
+
+    global most_common_count
+    most_common_count = int(args.words)
 
     # Hyperparameters
     filters = int(args.filters)
@@ -103,6 +103,8 @@ def main():
 
     # Get data
     texts, y_train = load_texts(args.crowdsourced)
+    
+    texts = MostCommonWordsService(most_common_count, sem_eval_path, texts=texts).call()
 
     tokenizer = load_tokenizer(texts)
 
@@ -115,26 +117,14 @@ def main():
 
     vocab_size = len(tokenizer.word_index) + 1
     print('Vocab size: {}'.format(vocab_size))
-
-    # 5. Load word vectors
-    word_vectors = load_word_vectors()
-    weights_matrix = get_embedding_weights(word_vectors, tokenizer.word_index)
     
-    # Remove word_vectors to free up memory
-    del word_vectors
-
-    # 7. Create Embeddings layer
-    embedding_layer = Embedding(input_dim=vocab_size, 
-                                output_dim=embedding_dims, 
-                                weights=[weights_matrix],
-                                input_length=seq_len,
-                                trainable=False
-                                )
-
     # Model definition
     model = Sequential()
 
-    model.add(embedding_layer)
+    model.add(Embedding(input_dim=vocab_size, 
+                                output_dim=embedding_dims,
+                                input_length=seq_len
+                                ))
 
     model.add(Conv1D(filters,
                     kernel_size,
@@ -167,7 +157,7 @@ def main():
                 epochs=epochs,
                 verbose=2)
 
-    conv_model_location = os.path.join(sem_eval_path, 'models', 'words_conv_model.h5')
+    conv_model_location = os.path.join(sem_eval_path, 'models', 'embedding_conv_model.h5')
     model.save(conv_model_location)
 
 if __name__ == "__main__":
