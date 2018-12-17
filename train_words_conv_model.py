@@ -56,7 +56,10 @@ def load_texts(crowdsourced=False, split=True, validation=False):
     else:
         return df
 
-def merge_train_val(train_df, val_df):
+def load_merged_texts(crowdsourced):
+    train_df = load_texts(crowdsourced=crowdsourced, split=False, validation=False)
+    val_df = load_texts(crowdsourced=crowdsourced, split=False, validation=True)
+
     base_path = os.path.join(sem_eval_path, 'data', 'Pickles')
     train_df_path = os.path.join(base_path, 'mixed_training_df.pickle')
     val_df_path = os.path.join(base_path, 'mixed_validation_df.pickle')
@@ -83,7 +86,8 @@ def merge_train_val(train_df, val_df):
     print('Shapes after splitting:')
     print(train_df.shape)
     print(val_df.shape)
-    return train_df, val_df
+
+    return train_df['text'], train_df['hyperpartisan'], val_df['text'], val_df['hyperpartisan']
 
 def load_tokenizer(texts):
     num_words = most_common_count + 1
@@ -189,15 +193,7 @@ def main():
     model_name = args.model
 
     # Get data
-    train_df = load_texts(crowdsourced=args.crowdsourced, split=False, validation=False)
-    val_df = load_texts(crowdsourced=args.crowdsourced, split=False, validation=True)
-    mixed_train_df, mixed_val_df = merge_train_val(train_df, val_df)
-
-    train_texts = mixed_train_df['text']
-    y_train = mixed_train_df['hyperpartisan']
-    val_texts = mixed_val_df['text']
-    y_val = mixed_val_df['hyperpartisan']
-
+    train_texts, y_train, val_texts, y_val = load_merged_texts(args.crowdsourced)
     print('Train shape: {}'.format(train_texts.shape))
     print('Validation shape: {}'.format(val_texts.shape))
     
