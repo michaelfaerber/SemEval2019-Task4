@@ -25,11 +25,23 @@ from sklearn.utils import shuffle
 from tqdm import tqdm
 import pickle
 import os
+from nltk import tokenize
+import math
+
+def isfloat(value):
+  try:
+    float(value)
+    return True
+  except ValueError:
+    return False
 
 def clean_text(text):
     """ Cleans the text in the only argument in various steps 
     ARGUMENTS: text: content/title, string
     RETURNS: cleaned text, string"""
+    if isfloat(text) and math.isnan(text):
+        return ''
+    
     # Replace newlines by space. We want only one doc vector.
     text = text.replace('\n', ' ').lower()
     # Expand contractions: you're to you are and so on.
@@ -46,7 +58,7 @@ def clean_text(text):
     #text = preprocessing.stem_text(text)
     return text
 
-def read_prepare_df(filename, file_path=''):
+def read_prepare_df(filename, file_path='', clean_text=True):
     """ Read a file, put it in a dataframe. Drop unnecessary columns, clean the content.
     Please provide an absolute path.
     ARGUMENTS: filename: path to the input file, string
@@ -60,12 +72,13 @@ def read_prepare_df(filename, file_path=''):
         # url is useless, remove it. Remove bias too. I no longer have them.
         #df = df.drop(['url', 'bias'], axis=1)
         # Drop NaNs!!
-        df = df[pd.notnull(df['content'])]
-        df = df[pd.notnull(df['title'])]
+        # df = df[pd.notnull(df['content'])]
+        # df = df[pd.notnull(df['title'])]
         # Question: should I combine the title and content in one field?
-        print('Cleaning content...')
-        df.content = df['content'].apply(clean_text)
-        df.title = df['title'].apply(clean_text)
+        if clean_text:
+            print('Cleaning content...')
+            df.content = df['content'].apply(clean_text)
+            df.title = df['title'].apply(clean_text)
         # Shuffle it
         df = shuffle(df, random_state=13)
         print("Dataframe shape after cleaning = {}".format(df.shape))
@@ -73,6 +86,39 @@ def read_prepare_df(filename, file_path=''):
             print('Writing dataframe to disk...')
             df.to_pickle(file_path)
     return df
+
+def read_prepare_sentence_df(filename, file_path):
+  if os.path.isfile(file_path):
+    df = pd.read_pickle(file_path)
+  else:
+    df = pd.read_csv(filename, sep='\t', encoding='utf-8', names=['id', 'title','content','hyperpartisan'])
+    print("Original DF shape = {}".format(df.shape))
+    # url is useless, remove it. Remove bias too. I no longer have them.
+    #df = df.drop(['url', 'bias'], axis=1)
+    # Drop NaNs!!
+    # df = df[pd.notnull(df['content'])]
+    # df = df[pd.notnull(df['title'])]
+
+    df['text'] = df['title'] + '. ' + df['content']
+
+    sentences = []
+    for index, article in df.iterrows():
+        article_id = article['id']
+        article_hyperpartisan = article['hyperpartisan']
+        sent_text = tokenize.sent_tokenize(article['text'])
+        for sentence in sent_text:
+            sentences.append({ 'id': article_id, 'hyperpartisan': article_hyperpartisan, 'text': sentence })
+    df = pd.DataFrame(sentences)
+
+    print('Cleaning content...')
+    df['text'] = df['text'].apply(clean_text)
+    # Shuffle it
+    df = shuffle(df, random_state=13)
+    print("Dataframe shape after cleaning = {}".format(df.shape))
+    if file_path:
+        print('Writing dataframe to disk...')
+        df.to_pickle(file_path)
+  return df
 
 def read_prepare_test_df(filename, file_path=''):
     """ Read a file, put it in a dataframe. Drop unnecessary columns, clean the content.
@@ -86,8 +132,8 @@ def read_prepare_test_df(filename, file_path=''):
         df = pd.read_csv(filename, sep='\t', encoding='utf-8', names=['id', 'title','content'])
         print("Original DF shape = {}".format(df.shape))
         # Drop NaNs!!
-        df = df[pd.notnull(df['content'])]
-        df = df[pd.notnull(df['title'])]
+        # df = df[pd.notnull(df['content'])]
+        # df = df[pd.notnull(df['title'])]
         # Question: should I combine the title and content in one field?
         print('Cleaning content...')
         df.content = df['content'].apply(clean_text)
