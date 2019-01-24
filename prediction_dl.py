@@ -13,6 +13,7 @@ from datetime import datetime
 inputFileName = 'articles-validation-bypublisher-20181122'
 runOutputFileName = "prediction.txt"
 sem_eval_path = '/home/peter-brinkmann/'
+# sem_eval_path = '/home/agon/Files/SemEval/'
 logging.basicConfig(filename='{}/logs/info_log.log'.format(sem_eval_path), filemode='w', 
                     format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 seq_len = 5000
@@ -60,6 +61,7 @@ def _convert_xml_to_tsv(inputDataset):
 def _convert_tsv_to_dataframe(tsv_file):
     df_location = os.path.join(sem_eval_path, 'data', 'Pickles', '{}_df.pickle'.format(inputFileName))
     logging.info('Converting tsv to dataframe. Df location: {}.'.format(df_location))
+    print('teeeest 1')
     df = clean_shuffle.read_prepare_test_df(tsv_file, file_path=df_location)
     logging.info('Dataframe created. Shape: {}.'.format(df.shape))
     # df.sort_values('id', inplace=True)
@@ -83,7 +85,13 @@ def _predict(model, X_val):
                X_val: the validation matrix for which labels have to be predicted
     RETURNS: y_pred: predicted labels Pandas series"""
     logging.info('Predicting values')
+    logging.info('X_val: ')
+    logging.info(X_val)
+    # Drop NaNs!!
+    # X_val = X_val[pd.notnull(df['content'])]
     predicted_values = model.predict_classes(X_val)
+    logging.info('predicted_values: ')
+    logging.info(predicted_values)
     formatted_pred = predicted_values.reshape((-1,))
     return pd.Series(formatted_pred)
 
@@ -125,6 +133,8 @@ def main(inputDataset, outputDir):
     # Duration on shetland: 00h:33m:29s
     # Duration on TIRA: 04h:53m:30s
     input_df = _convert_tsv_to_dataframe(input_tsv)
+    logging.info('Input df: ')
+    logging.info(input_df.head(30))
 
     # Convert texts to sequences
     # Duration on shetland: 00h:01m:33s 

@@ -39,8 +39,13 @@ def clean_text(text):
     """ Cleans the text in the only argument in various steps 
     ARGUMENTS: text: content/title, string
     RETURNS: cleaned text, string"""
-    if isfloat(text) and math.isnan(text):
-        return ''
+    if isfloat(text):
+        try:
+            if math.isnan(text):
+                return ''
+        except TypeError:
+            print('text: {}'.format(text))
+            return ''
     
     # Replace newlines by space. We want only one doc vector.
     text = text.replace('\n', ' ').lower()
