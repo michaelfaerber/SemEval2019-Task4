@@ -63,7 +63,7 @@ def clean_text(text):
     #text = preprocessing.stem_text(text)
     return text
 
-def read_prepare_df(filename, file_path='', clean_text=True):
+def read_prepare_df(filename, file_path='', should_clean_text=True):
     """ Read a file, put it in a dataframe. Drop unnecessary columns, clean the content.
     Please provide an absolute path.
     ARGUMENTS: filename: path to the input file, string
@@ -80,7 +80,7 @@ def read_prepare_df(filename, file_path='', clean_text=True):
         # df = df[pd.notnull(df['content'])]
         # df = df[pd.notnull(df['title'])]
         # Question: should I combine the title and content in one field?
-        if clean_text:
+        if should_clean_text:
             print('Cleaning content...')
             df.content = df['content'].apply(clean_text)
             df.title = df['title'].apply(clean_text)
@@ -90,10 +90,13 @@ def read_prepare_df(filename, file_path='', clean_text=True):
         if file_path:
             print('Writing dataframe to disk...')
             df.to_pickle(file_path)
+
+    # Shuffle randomly
+    df = df.sample(frac=1).reset_index(drop=True)
     return df
 
 def read_prepare_sentence_df(filename, file_path):
-  if os.path.isfile(file_path):
+  if False: #os.path.isfile(file_path):
     df = pd.read_pickle(file_path)
   else:
     df = pd.read_csv(filename, sep='\t', encoding='utf-8', names=['id', 'title','content','hyperpartisan'])
@@ -106,6 +109,8 @@ def read_prepare_sentence_df(filename, file_path):
 
     df['text'] = df['title'] + '. ' + df['content']
 
+    print(df.columns)
+
     sentences = []
     for index, article in df.iterrows():
         article_id = article['id']
@@ -117,6 +122,7 @@ def read_prepare_sentence_df(filename, file_path):
 
     print('Cleaning content...')
     df['text'] = df['text'].apply(clean_text)
+
     # Shuffle it
     df = shuffle(df, random_state=13)
     print("Dataframe shape after cleaning = {}".format(df.shape))

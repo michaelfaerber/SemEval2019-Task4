@@ -34,8 +34,8 @@ from tqdm import tqdm
 import logging
 import multiprocessing
 
-logging.basicConfig(filename='/home/peter-brinkmann/logs/info_log.log', filemode='w', 
-                    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+# logging.basicConfig(filename='/home/peter-brinkmann/logs/info_log.log', filemode='w', 
+#                     format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 cores = multiprocessing.cpu_count()
 assert gensim.models.doc2vec.FAST_VERSION > -1, "this will be painfully slow otherwise"
 

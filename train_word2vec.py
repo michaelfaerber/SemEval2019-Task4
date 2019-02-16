@@ -68,7 +68,8 @@ def main():
       words = word_tokenize(sentence)
       sentences.append(words)
   
-  model = Word2Vec(sentences, min_count=1, workers=cores)
+  model = Word2Vec(sentences, min_count=1, size=100, workers=cores)
+  
   print(model)
   print(model['trump'])
   
