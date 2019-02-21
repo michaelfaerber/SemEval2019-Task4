@@ -59,34 +59,4 @@ The script works through these steps:
   3. Define the DL model (CNN, LSTM or CNN-LSTM hybrid based on the -a algorithm).
   4. Train the model until convergence. Store the trained tokenizer on disk. Next time the model will be loaded from disk.
 
-To evaluate the 
-
-
-## STEP 3: 
-train embeddings based on Doc2Vec. Two separate embeddings are obtained for the title and the content.
-These are then used to train an SVC model. Both embedding models and the SVC model are committed to disk.
-
-NOTE: this uses the clean_shuffle module to create a dataframe in which data is cleaned and shuffled.
-      It creates paragraph vectors in the para2vec module, which is explained at the end.
-```
-python training.py
-```
-## STEP 4: 
-performs validation using the provided validation set, and calculates a number of metrics. Further, the hand-prepared training file with 645 records is used as a second validation file, mimicking the 2 test files
-```
-python validation.py
-```
-
-MODULES which are used internally.
-
-1. *clean_shuffle.py*: create a dataframe from the input file in which data is cleaned and shuffled
-
-2. *para2vec.py*: The most important of all the modules. 
-It creates 2 doc2vec dbow models for the content and the title. Docs (title/content) are tagged to their hyperpartisan
-indicator (0/1 after Step 2), and only then is the model trained. 
-It also includes functions to combine embeddings and to map document vectors to their original labels.
-
-Both doc2vec models have been tested extensively with various hyperparameters by splitting the training set (not on the validation set), and this should be the best possible (the only thing that might be reduced is the 'sample' hyperparameter for the content model)
-
-**VERY IMPORTANT:** By tagging documents with their hyperpartisan indicator (which has 2 values), we may be restricting the output vectors. Instead, it might be possible to tag with the article ids and then introduce the labels at the SVC stage.
-SEE todo_issues.txt (2nd issue) for more details.
+To evaluate the model, use `-e` option.  This will run the script on evaluation mode, which loads the trained model from disk and runs it against the validation data to get the model's evaluation metrics. The metrics will be printed in a log file.
