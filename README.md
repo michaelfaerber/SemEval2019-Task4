@@ -1,14 +1,6 @@
 Created: 26 November 2017
 
-**see also the todo_issues.txt**
-
-
-The method used for the hyperpartisan classification problem is two-fold.
-__PART 1__: 2 shallow neural networks based on Mikolov/Le's Paragraph vectors are trained using the gensim library's Doc2Vec class
-__PART 2__: The embeddings obtained from Doc2Vec are combined and an SVC model is used for classification
-
-
-Now it's time to look at the steps to execute the program. An accompanying description will be provided for each step. \
+Let's look at the steps to execute the program, where an accompanying description will be provided for each step. \
 The docstrings (module and function level) and inline comments in the modules provide additional explanations.
 
 
