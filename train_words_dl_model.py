@@ -76,18 +76,7 @@ def define_conv_model(tokenizer, filters=64, kernel_size=4, hidden_dims=256):
 
     return model
 
-def define_lstm_model(tokenizer, units=128):
-    model = Sequential()
-
-    embedding_layer = load_embedding_layer(tokenizer)
-    model.add(embedding_layer)
-
-    model.add(LSTM(units, dropout=0.2, recurrent_dropout=0.2))
-    model.add(Dense(1, activation='sigmoid'))
-
-    return model
-
-def define_lstm_v2_model(tokenizer, units=128, embedding_size=128):
+def define_lstm_model(tokenizer, units=128, embedding_size=128):
     model = Sequential()
 
     logging.info('Building LSTM v2...')
@@ -140,9 +129,6 @@ def generate_new_model_name():
     elif algorithm == 2:
         alg = 'lstm'
         version = lstm_version
-    elif algorithm == 3:
-        alg = 'lstm_v2'
-        version = 1
     else:
         raise Exception('Unknown algorithm')
     return 'words_{}_model_w{}_v{}'.format(alg, embedding_mode, version)
@@ -210,7 +196,7 @@ def main():
     parser.add_argument("--word_vectors", '-w', default="0",
                         help="Use this argument to set the word vectors to use: 0: Google's Word2vec, 1: GloVe, 2: Fasttext, 3: Custom pretrained word2vec, 4: Custom pretrained Fasttext, 5: Custom pretrained news word2vec. Default: 0")
     parser.add_argument("--algorithm", '-a', default="0",
-                        help="Use this argument to set the algorithm to use: 0: CNN, 1: CNN + LSTM, 2: LSTM, 3: LSTMv2. Default: 0")
+                        help="Use this argument to set the algorithm to use: 0: CNN, 1: CNN + LSTM, 2: LSTM. Default: 0")
     parser.add_argument("--learning_rate", '-l', default="0.001",
                         help="Use this argument to set the learning rate to use. Default: 0.001")
     parser.add_argument("--evaluate", '-e', action='store_true', default="False",
@@ -237,10 +223,6 @@ def main():
     elif algorithm == 2:
         seq_len = 100
         sentences = True
-    elif algorithm == 3:
-        seq_len = 100
-        global words_count
-        words_count = 100000
     else:
         raise Exception('Unknown algorithm')
 
@@ -324,8 +306,6 @@ def main():
         model = define_conv_lstm_model(tokenizer)
     elif algorithm == 2:
         model = define_lstm_model(tokenizer)
-    elif algorithm == 3:
-        model = define_lstm_v2_model(tokenizer)
     else:
         raise Exception('Unknown algorithm')
 

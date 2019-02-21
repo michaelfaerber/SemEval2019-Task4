@@ -42,6 +42,26 @@ ground truth sqlite table to 1/0.
 python create_unified_tsv.py [-h]
                 {training,validation,test,crowdsourced_train,crowdsourced_test}
 ```
+## STEP 3
+Train Deep Learning model. 
+```
+python(3) train_words_dl_model.py -p {data directory}
+```
+This will train a CNN model using Google's words2vec word vectors. 
+ - Use `-a` argument to train a different model: 
+    1. `-a 1` - a hybrid CNN-LSTM model, or 
+    2. `-a 2` - a LSTM model.
+ - Use `-w` argument to use a different embedding layer, like custom pretrained word2vec, Stanford's Glove or Fasttext.
+
+The script works through these steps: 
+  1. Read the processed articles and train a tokenizer on them. Store the trained tokenizer on disk. Next time the tokenizer will be loaded from disk.
+  2. The articles will then be converted to sequences using the trained tokenizer.
+  3. Define the DL model (CNN, LSTM or CNN-LSTM hybrid based on the -a algorithm).
+  4. Train the model until convergence. Store the trained tokenizer on disk. Next time the model will be loaded from disk.
+
+To evaluate the 
+
+
 ## STEP 3: 
 train embeddings based on Doc2Vec. Two separate embeddings are obtained for the title and the content.
 These are then used to train an SVC model. Both embedding models and the SVC model are committed to disk.
