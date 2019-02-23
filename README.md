@@ -1,4 +1,4 @@
-This repository includes the source code used by the team "Peter Brinkmann" for participating in the [SemEval 2019 Task 4: Hyperpartisan News Detection](https://webis.de/events/semeval-19/).
+**This repository includes the source code used by the team "Peter Brinkmann" for participating in the [SemEval 2019 Task 4: Hyperpartisan News Detection](https://webis.de/events/semeval-19/).**
 
 Note: The docstrings (module and function level) and inline comments in the modules provide additional explanations.
 
