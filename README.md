@@ -63,3 +63,5 @@ If you use our code or would like to referene our work, please cite it as follow
   crossref  = {DBLP:conf/semeval/2019}
 }
 ```
+Feel free to get in touch with us in case of questions of requests:
+[Michael Färber](http://dbis.informatik.uni-freiburg.de/team/faerber/michael), University of Freiburg, Germany
