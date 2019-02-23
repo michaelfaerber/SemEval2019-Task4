@@ -1,3 +1,5 @@
+This repository includes the source code used by the team "Peter Brinkmann" for participating in the (SemEval 2019 Task 4: Hyperpartisan News Detection)[https://webis.de/events/semeval-19/].
+
 Note: The docstrings (module and function level) and inline comments in the modules provide additional explanations.
 
 
@@ -17,13 +19,13 @@ There are 3 such pairs of files which have been supplied:
 The 2nd and the 3rd pairs are large training and validation files from the Buzzfeed data set.
 
 
-## STEP 1
+## STEP 1: Import Data into DB
 Insert the data from one of the ground truth XML files (training/test/validation/Crowd-sourced train/crowd-sourced test) into a SQLITE3 database.
 ```
 python(3) ground_truth_sqlite.py [-h] [--drop] [--nodrop]
                   {training,validation,test,crowdsourced_train,crowdsourced_test}
 ```
-## STEP 2
+## STEP 2: Combine Articles with Ground Truth Information
 combine the data from one of the XML article files (training/test/validation/crowd-sourced train/crowd-sourced test)
 with the ground truth from a SQLITE3 table together in a TSV file. It also changes hyperpartisan = true/false in the
 ground truth sqlite table to 1/0.
@@ -31,8 +33,7 @@ ground truth sqlite table to 1/0.
 python create_unified_tsv.py [-h]
                 {training,validation,test,crowdsourced_train,crowdsourced_test}
 ```
-## STEP 3
-Train Deep Learning model. 
+## STEP 3: Train the Deep Learning Model
 ```
 python(3) train_words_dl_model.py -p {data directory}
 ```
