@@ -1,4 +1,4 @@
-This repository includes the source code used by the team "Peter Brinkmann" for participating in the (SemEval 2019 Task 4: Hyperpartisan News Detection)[https://webis.de/events/semeval-19/].
+This repository includes the source code used by the team "Peter Brinkmann" for participating in the [SemEval 2019 Task 4: Hyperpartisan News Detection](https://webis.de/events/semeval-19/).
 
 Note: The docstrings (module and function level) and inline comments in the modules provide additional explanations.
 
@@ -50,3 +50,16 @@ The script works through these steps:
   4. Train the model until convergence. Store the trained tokenizer on disk. Next time the model will be loaded from disk.
 
 To evaluate the model, use `-e` option.  This will run the script on evaluation mode, which loads the trained model from disk and runs it against the validation data to get the model's evaluation metrics. The metrics will be printed in a log file.
+
+## References & Contact
+If you use our code or would like to referene our work, please cite it as follows:
+```
+@inproceedings{Faerber2018SemEval,
+  author    = {Michael F{\"{a}}rber and Agon Qurdina and Lule Ahmedi},
+  title     = "{Team Peter Brinkmann at SemEval-2019 Task 4: Detecting Biased News Articles Using Convolutional Neural Networks}",
+  booktitle = {Proceedings of The 13th International Workshop on Semantic Evaluation,
+               SemEval@NAACL-HLT, Minneapolis, USA, June 6-7, 2019},
+  year      = {2019},
+  crossref  = {DBLP:conf/semeval/2019}
+}
+```
