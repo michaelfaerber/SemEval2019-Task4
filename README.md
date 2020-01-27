@@ -55,13 +55,18 @@ To evaluate the model, use `-e` option.  This will run the script on evaluation 
 If you use our code or would like to referene our work, please cite it as follows:
 ```
 @inproceedings{Faerber2018SemEval,
-  author    = {Michael F{\"{a}}rber and Agon Qurdina and Lule Ahmedi},
-  title     = "{Team Peter Brinkmann at SemEval-2019 Task 4: Detecting Biased News Articles Using Convolutional Neural Networks}",
-  booktitle = {Proceedings of The 13th International Workshop on Semantic Evaluation,
-               SemEval@NAACL-HLT, Minneapolis, USA, June 6-7, 2019},
+  author    = {Michael F{\"{a}}rber and
+               Agon Qurdina and
+               Lule Ahmedi},
+  title     = "{Team Peter Brinkmann at SemEval-2019 Task 4: Detecting Biased News
+               Articles Using Convolutional Neural Networks}",
+  booktitle = "{Proceedings of the 13th International Workshop on Semantic Evaluation}",
+  series    = "{SemEval@NAACL-HLT'19}",
+  location  = "{Minneapolis, MN, USA}",
+  pages     = {1032--1036},
   year      = {2019},
-  crossref  = {DBLP:conf/semeval/2019}
+  url       = {https://www.aclweb.org/anthology/S19-2180/}
 }
 ```
 Feel free to get in touch with us in case of questions of requests:
-[Michael Färber](https://sites.google.com/view/michaelfaerber/), University of Freiburg, Germany
+[Michael Färber](https://sites.google.com/view/michaelfaerber/), Karlsruhe Institute of Technology, Germany
